@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ESP32 LED Control</title>
+</head>
+<body>
+  <h1>ESP32 LED コントロール</h1>
+  <button onclick="updateLED('on')">LED ON</button>
+  <button onclick="updateLED('off')">LED OFF</button>
+
+  <script>
+    const username = "Torichan01-TC1";
+    const repo = "esp32-control";
+    const path = "led_status.json";
+    const token = "ghp_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"; // ← 必ず置き換える
+
+    async function updateLED(state) {
+      const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+
+      const getRes = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.v3+json"
+        }
+      });
+
+      const fileData = await getRes.json();
+      const newContent = btoa(JSON.stringify({ led: state }));
+
+      const res = await fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.v3+json"
+        },
+        body: JSON.stringify({
+          message: `Set LED ${state}`,
+          content: newContent,
+          sha: fileData.sha
+        })
+      });
+
+      if (res.ok) {
+        alert(`LEDを「${state.toUpperCase()}」に設定しました`);
+      } else {
+        const errorText = await res.text();
+        console.error("更新失敗:", errorText);
+        alert("更新に失敗しました：" + res.status);
+      }
+    }
+  </script>
+</body>
+</html>
